@@ -124,7 +124,7 @@ async function dl(did,fobj){
   //  setTimeout(async ()=>{
       let start = fs.statSync(ffpp).size;
       if(start<info.bytesLoaded){
-         file.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
+         ff.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
       }else if(start>=info.bytesLoaded){
        setTimeout(async ()=>{
          console.log("dl done");
