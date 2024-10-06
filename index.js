@@ -118,7 +118,7 @@ async function dl(did,fobj){
     console.error(error);
     await bot.telegram.sendMessage(owner,`Err - ${error}`);
   })
-  stream.on('progress', info => {
+  stream.on('progress', async (info) => {
   console.log(info.bytesLoaded,"/",info.bytesTotal);
   if(info.bytesLoaded==info.bytesTotal){
   //  setTimeout(async ()=>{
