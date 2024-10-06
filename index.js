@@ -227,8 +227,11 @@ bot.on('text', async (ctx) => {
       ctx.reply('Alredy running😅!');
     } 
   }else if(text == '/run0'){
+    stopn=0;
     run=0;
+    ctx.reply('runnig var set to 0');
   }else if(text == '/ts'){
+    ctx.reply('Trying to run timingS Func');
     timingS();
   }else{
     mc=await megaC(text);
