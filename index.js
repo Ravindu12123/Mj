@@ -43,6 +43,16 @@ function cleardl(){
       if (err) throw err;}); }});
 }
 
+async function stopPros(){
+   console.log("Pros-stopped!!!!");
+    await cleardl();
+    bot
+      .telegram
+      .sendMessage(owner,"process stoped!🙂\nBy You via Func☝️");
+    stopn=0;
+    run=0;
+}
+
 const replacerFunc = () => {const visited = new WeakSet();return (key, value) => {
 if (typeof value === "object" && value !== null) {
  if (visited.has(value)) { return;}visited.add(value);
@@ -98,20 +108,19 @@ async function dl(did,fobj){
   stream.on('error', error => console.error(error))
   stream.on('progress', info => {
   console.log(info.bytesLoaded,"/",info.bytesTotal);
-if(info.bytesLoaded==info.bytesTotal){setTimeout(async ()=>{
+  if(info.bytesLoaded==info.bytesTotal){
+    setTimeout(async ()=>{
       let start = fs.statSync(ffpp).size;
   if(start<info.bytesLoaded){
   file.download({ start })
   .pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
-  }else{
-      console.log("dl done");
+  }else if(start>=info.bytesLoaded){
+     console.log("dl done");
     if(fobj.type=="image"){
       rr=await sendImg({fp:ffpp,file:ff});
-    }else if(fobj.type=="video"
-  &&
-    fobj.size<sizelimits.M20){
+    }else if(fobj.type=="video"&&fobj.size<sizelimits.M20){
       rr=await sendV({fp:ffpp,file:ff});
-             }else{
+    }else{
       rr= await sendT({fp:ffpp,file:ff});
     }
      if(rr==true){
@@ -120,30 +129,28 @@ if(info.bytesLoaded==info.bytesTotal){setTimeout(async ()=>{
       console.log("error on send-",ffpp);
      }
     res(rr);
-      }},50);}});
-   stream.pipe(
-     fs.createWriteStream(ffpp)
-   );})}) 
+  }
+ },50);
+  }});
+   stream.pipe(fs.createWriteStream(ffpp));
+  })
+}) 
 }
 
 async function timingS(){
   if(stopn==0){
- data= fs.readFileSync('./files.json').toString();
+  data= fs.readFileSync('./files.json').toString();
   obj = JSON.parse(data);
-  if(obj.files.length>0){
+  if(obj.files.length>=1){
     file=obj.files.shift();
     x=await dl(file.downloadId,file);
     if(x==true){
       console.log("done",x);
-      fs.writeFileSync(
-    "files.json",
-    JSON.stringify(obj));
+      fs.writeFileSync("files.json",JSON.stringify(obj));
       setTimeout(timingS,timingsSleep);
     }else{
       console.log("error on send");
-      fs.writeFileSync(
-    "files.json",
-    JSON.stringify(obj));
+      fs.writeFileSync("files.json",JSON.stringify(obj));
       setTimeout(timingS,timingsSleep);
     }
   }else{
@@ -210,7 +217,15 @@ bot.on('text', async (ctx) => {
     if(run==1){
     stopn=1;
     ctx.reply('Trying to  stop!!!🫡');
-    }else{ctx.reply('Alredy stopped!😅');}
+    }else{
+      ctx.reply('Alredy stopped!😅');
+    }
+  }else if(text == '/rerun'){
+    if(run==0){
+      timingS();
+    }else{
+      ctx.reply('Alredy running😅!');
+    } 
   }else{
     mc=await megaC(text);
     if(mc==true){
