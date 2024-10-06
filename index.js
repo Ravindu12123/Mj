@@ -114,7 +114,7 @@ async function dl(did,fobj){
   fzz=await SizeF(ff.size);
   await bot.telegram.sendMessage(owner,`Downloading:- ${ff.name}\nSize:- ${fzz}`);
   stream= ff.download();
-  stream.on('error', error => {
+  stream.on('error', async (error) => {
     console.error(error);
     await bot.telegram.sendMessage(owner,`Err - ${error}`);
   })
