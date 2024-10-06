@@ -18,7 +18,7 @@ var run=0;stopn=0;
 var filetypes={jpg:"image",png:"image",gif:"image",jpeg:"image",svg:"image",bmp:"image",tiff:"image",ico:"image",webp:"image",mp4:"video",mp3:"audio",mkv:"video",webm:"video",flv:"video",avi:"video",mov:"video",MOV:"video"
 };
 sizelimits={M20:20971520,M50:52428800,M100:104857600,};
-timingsSleep=1000;
+timingsSleep=process.env.ts==null ? 1000:process.env.ts;
 var smethod={image:{method:"sendPhoto",name:"photo"},video:{method:"sendVideo",name:"video"},document:{method:"sendDocument",name:"document"},audio:{method:"sendAudio",name:"audio"}};
 
 app.use(cors());
@@ -32,6 +32,13 @@ app.get("/",(req,res)=>{
 })
 
 var fl=[];fll=[];dlp="download";var follf;
+
+function SizeF(a,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
+const sleepf = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
+function pres(per, tot) {
+    p=Number(per);t=Number(tot);
+    return ((p / t) * 100).toFixed(2)
+}
 
 function cleardl(){
   directory=path.join(__dirname,dlp);
@@ -104,33 +111,42 @@ async function dl(did,fobj){
   var ffpp=path.join(__dirname,dlp,ff.name);
     Ff=ff;
   console.log("doing: "+ff.name);
+  fzz=await SizeF(ff.size);
+  await bot.telegram.sendMessage(owner,`Downloading:- ${ff.name}\nSize:- ${fzz}`);
   stream= ff.download();
-  stream.on('error', error => console.error(error))
+  stream.on('error', error => {
+    console.error(error);
+    await bot.telegram.sendMessage(owner,`Err - ${error}`);
+  })
   stream.on('progress', info => {
   console.log(info.bytesLoaded,"/",info.bytesTotal);
   if(info.bytesLoaded==info.bytesTotal){
-    setTimeout(async ()=>{
+  //  setTimeout(async ()=>{
       let start = fs.statSync(ffpp).size;
-  if(start<info.bytesLoaded){
-  file.download({ start })
-  .pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
-  }else if(start>=info.bytesLoaded){
-     console.log("dl done");
-    if(fobj.type=="image"){
-      rr=await sendImg({fp:ffpp,file:ff});
-    }else if(fobj.type=="video"&&fobj.size<sizelimits.M20){
-      rr=await sendV({fp:ffpp,file:ff});
-    }else{
-      rr= await sendT({fp:ffpp,file:ff});
-    }
-     if(rr==true){
-      fs.unlinkSync(ffpp);
-     }else{
-      console.log("error on send-",ffpp);
-     }
-    res(rr);
-  }
- },50);
+      if(start<info.bytesLoaded){
+         file.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
+      }else if(start>=info.bytesLoaded){
+       setTimeout(async ()=>{
+         console.log("dl done");
+         await bot.telegram.sendMessage(owner,`${ff.name} -Downloaded! Now Uploading!💪`);
+         if(fobj.type=="image"){
+           rr=await sendImg({fp:ffpp,file:ff});
+         }else if(fobj.type=="video"&&fobj.size<sizelimits.M20){
+           rr=await sendV({fp:ffpp,file:ff});
+         }else{
+           rr=await sendT({fp:ffpp,file:ff});
+         }
+         if(rr==true){
+            fs.unlinkSync(ffpp);
+         }else{
+            console.log("error on send-",ffpp);
+            console.log(rr);
+            await bot.telegram.sendMessage(owner,'Err on sending');
+         }
+         res(rr);
+       },100);
+      }
+// },50);
   }});
    stream.pipe(fs.createWriteStream(ffpp));
   })
@@ -155,20 +171,13 @@ async function timingS(){
     }
   }else{
     console.log("no files");
-    bot
-      .telegram
-      .sendMessage(
-        owner,
-        "Process finished!!😇"
-      );
+    await bot.telegram.sendMessage(owner,"Process finished!!😇");
     run=0;
   }
   }else{
     console.log("stopped!!!!");
     await cleardl();
-    bot
-      .telegram
-      .sendMessage(owner,"process stoped!🙂\nBy You");
+    bot.telegram.sendMessage(owner,"process stoped!🙂\nBy You@");
     stopn=0;
     run=0;
   }
@@ -181,19 +190,14 @@ async function loadMega(url) {
   h=JSON.stringify(folder, replacerFunc());
   fg=fl.find(e=>e.size<=sizelimits.M50);
   console.log(folder.children.length);
-  fs.writeFileSync(
-    "files.json",
-    JSON.stringify({files:fl})
-  );
-  fs.writeFileSync(
-    "Allfiles.json",
-    JSON.stringify({files:fll})
-  );
+  fs.writeFileSync("files.json",JSON.stringify({files:fl}));
+  fs.writeFileSync("Allfiles.json",JSON.stringify({files:fll}));
+  
   console.log(ctext=fll.length+" of files founded!\n and  "+fl.length+" of them can be uploaded to telegram");
   rt=`This is the Total extracted files from the link ${fl.length} of files I will send ${fg.length} files now`;
   spa=path.join(__dirname,"Allfiles.json");
-  bot.telegram.sendDocument(owner,{source:spa,
-caption:rt});
+  await bot.telegram.sendDocument(owner,{source:spa});
+  await bot.telegram.sendMessage(owner,rt);
   run=1;
   timingS();
 }
