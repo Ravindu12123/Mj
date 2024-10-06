@@ -112,7 +112,7 @@ async function dl(did,fobj){
     Ff=ff;
   console.log("doing: "+ff.name);
   fzz=await SizeF(ff.size);
-  await bot.telegram.sendMessage(owner,`Downloading:- ${ff.name}\nSize:- ${fzz}`);
+  msg1=await bot.telegram.sendMessage(owner,`Downloading:- ${ff.name}\nSize:- ${fzz}`);
   stream= ff.download();
   stream.on('error', async (error) => {
     console.error(error);
@@ -126,9 +126,10 @@ async function dl(did,fobj){
       if(start<info.bytesLoaded){
          ff.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
       }else if(start>=info.bytesLoaded){
-       setTimeout(async ()=>{
+      // setTimeout(async ()=>{
          console.log("dl done");
-         await bot.telegram.sendMessage(owner,`${ff.name} -Downloaded! Now Uploading!💪`);
+         msg1=await bot.telegram.editMessageText(owner,msg1.message_id,null,`${ff.name} -Downloaded! Now Uploading!💪`);
+         await sleepf(50);
          if(fobj.type=="image"){
            rr=await sendImg({fp:ffpp,file:ff});
          }else if(fobj.type=="video"&&fobj.size<sizelimits.M20){
@@ -138,13 +139,14 @@ async function dl(did,fobj){
          }
          if(rr==true){
             fs.unlinkSync(ffpp);
+            await bot.telegram.deleteMessage(owner,msg1.message_id);
          }else{
             console.log("error on send-",ffpp);
             console.log(rr);
             await bot.telegram.sendMessage(owner,'Err on sending');
          }
          res(rr);
-       },100);
+    //   },100);
       }
 // },50);
   }});
