@@ -209,6 +209,10 @@ app.listen(3000,()=>{
   if (!fs.existsSync(ddlp)){
     fs.mkdirSync(ddlp);
     console.log("download path created!");
+  }else{
+    console.log("download path exists!");
+    await cleardl();
+    console.log("cleared dl path!");
   }
 //ll="https://mega.nz/folder/2IlUSQwA#bMIrsQnNZtN5H6D2kcB_rA";
     /*console.log(await megaC(ll));;
