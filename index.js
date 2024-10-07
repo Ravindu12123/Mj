@@ -123,6 +123,7 @@ async function dl(did,fobj){
   console.log(info.bytesLoaded,"/",info.bytesTotal);
   if(info.bytesLoaded==info.bytesTotal){
   //  setTimeout(async ()=>{
+      gjesuw=await sleepf(50);
       let start = fs.statSync(ffpp).size;
       fzs=await SizeF(start);
       console.log('now File size Is '+fzs);
