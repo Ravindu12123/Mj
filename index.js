@@ -129,7 +129,11 @@ async function dl(did,fobj){
       if(start<info.bytesLoaded){
          console.log("but file not filled\nTrying to fill It");
          ff.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
-      }else if(start==info.bytesLoaded){
+      }
+      start = fs.statSync(ffpp).size;
+      fzs=await SizeF(start);
+      console.log('now File size Is '+fzs);
+      if(start==info.bytesLoaded){
          console.log("dl done");
          msg1=await bot.telegram.editMessageText(owner,msg1.message_id,null,`${ff.name} -Downloaded! Now Uploading!💪`);
          nnf=await sleepf(50);var rr;
@@ -205,7 +209,7 @@ async function loadMega(url) {
   rt=`This is the Total extracted files from the link ${fl.length} of files I will send ${fg.length} files now`;
   spa=path.join(__dirname,"Allfiles.json");
   await bot.telegram.sendDocument(owner,{source:spa});
-  await bot.telegram.sendMessage(owner,rt);
+  await bot.telegram.sendMessage(owner,ctext);
   run=1;
   timingS();
 }
@@ -253,10 +257,17 @@ bot.on('text', async (ctx) => {
   }else if(text == '/isf'){
     dirCont = fs.readdirSync( ddlp );
     files = dirCont.filter( ( elm ) => elm.match(/.*\.(mp4?)/ig));
+    files = files.map(async (elm)=>{
+      pt=path.join(ddlp,elm);
+      siz = fs.statSync(pt).size;
+      fzs=await SizeF(siz);
+      console.log('now File size Is '+fzs);
+      return elm+' size: '+fzs;
+    })
     str=files.join('\n');
     await ctx.reply(`Found this files:-\n ${str}`);
   }else if(text == '/ttime'){
-    dd=await seepf(1000);
+    dd=await sleepf(1000);
     await ctx.reply('im sleeped 1 sec');
   }else{
     mc=await megaC(text);
