@@ -130,6 +130,7 @@ async function dl(did,fobj){
          console.log("but file not filled\nTrying to fill It");
          ff.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
       }
+      sleepsde=await sleepf(50);
       start = fs.statSync(ffpp).size;
       fzs=await SizeF(start);
       console.log('now File size Is '+fzs);
@@ -267,8 +268,8 @@ bot.on('text', async (ctx) => {
     str=files.join('\n');
     await ctx.reply(`Found this files:-\n ${str}`);
   }else if(text == '/ttime'){
-    dd=await sleepf(1000);
-    await ctx.reply('im sleeped 1 sec');
+    dd=await sleepf(5000);
+    await ctx.reply('im sleeped 5 sec');
   }else{
     mc=await megaC(text);
     if(mc==true){
