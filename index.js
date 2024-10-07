@@ -229,8 +229,8 @@ bot.on('text', async (ctx) => {
     ctx.reply('Hello there! 😊');
   } else if(text =='/stop'){
     if(run==1){
-    stopn=1;
-    ctx.reply('Trying to  stop!!!🫡');
+      stopn=1;
+      ctx.reply('Trying to  stop!!!🫡');
     }else{
       ctx.reply('Alredy stopped!😅');
     }
@@ -243,10 +243,19 @@ bot.on('text', async (ctx) => {
   }else if(text == '/run0'){
     stopn=0;
     run=0;
-    ctx.reply('runnig var set to 0');
+    await cleardl();
+    ctx.reply('runnig var set to 0\nand download path cleared');
   }else if(text == '/ts'){
     ctx.reply('Trying to run timingS Func');
     timingS();
+  }else if(text == '/isf'){
+    dirCont = fs.readdirSync( ddlp );
+    files = dirCont.filter( ( elm ) => elm.match(/.*\.(mp4?)/ig));
+    str=files.join('\n');
+    await ctx.reply(`Found this files:-\n ${str}`);
+  }else if(text == '/ttime'){
+    dd=await seepf(1000);
+    await ctx.reply('im sleeped 1 sec');
   }else{
     mc=await megaC(text);
     if(mc==true){
