@@ -106,7 +106,8 @@ formData.append('caption',obj.file.name);response = await axios.post(`https://ap
 }
 
 async function dl(did,fobj){
-  return new Promise(async (res,rej)=>{fol = File.fromURL(flu=follf+"/file/"+did[1]);
+ return new Promise(async (res,rej)=>{
+  fol = File.fromURL(flu=follf+"/file/"+did[1]);
   await fol.loadAttributes(async (error, ff) => {
   var ffpp=path.join(__dirname,dlp,ff.name);
     Ff=ff;
@@ -124,12 +125,12 @@ async function dl(did,fobj){
   //  setTimeout(async ()=>{
       let start = fs.statSync(ffpp).size;
       if(start<info.bytesLoaded){
+         console.log("but file not filled\nTrying to fill It");
          ff.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
-      }else if(start>=info.bytesLoaded){
-      // setTimeout(async ()=>{
+      }else if(start==info.bytesLoaded){
          console.log("dl done");
          msg1=await bot.telegram.editMessageText(owner,msg1.message_id,null,`${ff.name} -Downloaded! Now Uploading!💪`);
-         await sleepf(50);
+         nnf=await sleepf(50);var rr;
          if(fobj.type=="image"){
            rr=await sendImg({fp:ffpp,file:ff});
          }else if(fobj.type=="video"&&fobj.size<sizelimits.M20){
@@ -146,7 +147,10 @@ async function dl(did,fobj){
             await bot.telegram.sendMessage(owner,'Err on sending');
          }
          res(rr);
-    //   },100);
+      }else{
+        console.log("err on dl");
+        await cleardl();
+        timingS();
       }
 // },50);
   }});
