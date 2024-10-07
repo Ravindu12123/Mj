@@ -124,6 +124,8 @@ async function dl(did,fobj){
   if(info.bytesLoaded==info.bytesTotal){
   //  setTimeout(async ()=>{
       let start = fs.statSync(ffpp).size;
+      fzs=await SizeF(start);
+      console.log('now File size Is '+fzs);
       if(start<info.bytesLoaded){
          console.log("but file not filled\nTrying to fill It");
          ff.download({ start }).pipe(fs.createWriteStream(ffpp, {flags: 'r+',start}));
