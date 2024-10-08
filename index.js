@@ -13,7 +13,7 @@ const BOT_TOKEN = process.env.Token;
 const channel=process.env.channel;
 const owner=process.env.Owner;
 
-
+var helpText='🔰This is an Mega.nz File downloader advance bot!💪😊\n  Send Me a mega link to see the magic\n  And I am authers only bot😉\n\n🔰Commands:\n  /help -for help\n  /stop -for stop file sending!\n  /run0 -to clear dl and set run to 0 and stop runing \n  /ts -to resume sending if error or stoped unfortunatedly\n  /skipF -skip current file if only erroring!\n  /sk--index -to skip some bulk of file stop sending before use!\n  /rerun -to start the stoped by /stop\n  /isf -check the download path\n  /numF -check the reiming file count\n\nGood Day!😇';
 var run=0;stopn=0;
 var filetypes={jpg:"image",png:"image",gif:"image",jpeg:"image",svg:"image",bmp:"image",tiff:"image",ico:"image",webp:"image",mp4:"video",mp3:"audio",mkv:"video",webm:"video",flv:"video",avi:"video",mov:"video",MOV:"video"};
 var sizelimits={M20:20971520,M50:52428800,M100:104857600,};
@@ -334,9 +334,6 @@ bot.on('text', async (ctx) => {
     })
     str=files.join('\n');
     await ctx.reply(`Found this files:-\n ${str}`);
-  }else if(text == '/ttime'){
-    dd=await sleepf(5000);
-    await ctx.reply('im sleeped 5 sec');
   }else if(text == '/skipF'){
     msss=await ctx.reply('Trying to skip current File!**');
     x=await skipts(msss);
@@ -349,6 +346,8 @@ bot.on('text', async (ctx) => {
     ind=Number(text.split('--')[1]);
     mzzz=await ctx.reply(`Trying to skip ${ind} of files!🫡`);
     await skipind(mzzz,ind);
+  }else if(text == '/help'){
+    await ctx.reply(helpText);
   }else{
     mc=await megaC(text);
     if(mc==true){
