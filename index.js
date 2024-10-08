@@ -294,9 +294,8 @@ app.listen(3000,()=>{
     loadMega(ll);*/
 bot.on('text', async (ctx) => {
   const text = ctx.message.text;
-  if (text === 'hello') {
-    ctx.reply('Hello there! 😊');
-  } else if(text =='/stop'){
+  if(ctx.message.chat.id == owner){
+  if(text =='/stop'){
     if(run==1){
       stopn=1;
       ctx.reply('Trying to  stop!!!🫡');
@@ -358,6 +357,9 @@ bot.on('text', async (ctx) => {
     }else{
       ctx.reply('Give me a valid Mega link!😇');
     }
+  }
+  }else{
+    ctx.reply('Sorry I am private Bot🙃');
   }
 });
     },3000);
