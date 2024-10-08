@@ -15,10 +15,10 @@ const owner=process.env.Owner;
 
 
 var run=0;stopn=0;
-var filetypes={jpg:"image",png:"image",gif:"image",jpeg:"image",svg:"image",bmp:"image",tiff:"image",ico:"image",webp:"image",mp4:"video",mp3:"audio",mkv:"video",webm:"video",flv:"video",avi:"video",mov:"video",MOV:"video"
-};
-sizelimits={M20:20971520,M50:52428800,M100:104857600,};
-timingsSleep=process.env.ts==null ? 1000:process.env.ts;
+var filetypes={jpg:"image",png:"image",gif:"image",jpeg:"image",svg:"image",bmp:"image",tiff:"image",ico:"image",webp:"image",mp4:"video",mp3:"audio",mkv:"video",webm:"video",flv:"video",avi:"video",mov:"video",MOV:"video"};
+var sizelimits={M20:20971520,M50:52428800,M100:104857600,};
+var timingsSleep=process.env.ts==null ? 1000:process.env.ts;
+var dlp=process.env.dlp==null ? "download":process.env.dlp;
 var smethod={image:{method:"sendPhoto",name:"photo"},video:{method:"sendVideo",name:"video"},document:{method:"sendDocument",name:"document"},audio:{method:"sendAudio",name:"audio"}};
 
 app.use(cors());
@@ -31,7 +31,7 @@ app.get("/",(req,res)=>{
   res.send("Hello World");
 })
 
-var fl=[];fll=[];dlp="download";var follf;
+var fl=[];fll=[];erfiles=[];var follf;
 
 function SizeF(a,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
 const sleepf = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
@@ -60,32 +60,41 @@ async function stopPros(){
     run=0;
 }
 
-const replacerFunc = () => {const visited = new WeakSet();return (key, value) => {
-if (typeof value === "object" && value !== null) {
- if (visited.has(value)) { return;}visited.add(value);
-if(value.constructor!=null){
-if(value.constructor.name=="_File" 
-   && value.directory==false){
-  var {name,size,downloadId,key}=value;
-  typex=filetypes[name.split(".").pop()];
-  so={
-    name:name,
-    size:size,
-    downloadId:downloadId,
-    key:key,
-    type:typex ? typex : "document",
+const replacerFunc = () => {
+  const visited = new WeakSet();
+  return (key, value) => {
+     if (typeof value === "object" && value !== null) {
+       if (visited.has(value)) { return;}visited.add(value);
+       if(value.constructor!=null){
+         if(value.constructor.name=="_File" && value.directory==false){
+           var {name,size,downloadId,key}=value;
+           typex=filetypes[name.split(".").pop()];
+           so={
+             name:name,
+             size:size,
+             downloadId:downloadId,
+             key:key,
+             type:typex ? typex : "document",
+           };
+           if(so.type == "video" && so.size < sizelimits.M50 && so.size > 0){
+             fl.push(so);
+           }
+           if(so.size<=0){
+             erfiles.push(so);
+           }
+           fll.push(so);
+         }
+       }
+     }
+    return value;
   };
-  if(so.type=="video"&&so.size<sizelimits.M50){
-fl.push(so);
-  }
-  fll.push(so);
-  }}}return value;};};
+};
 
 async function sendV(obj,res){
  formData = new FormData();
  formData.append('chat_id',channel);
 formData.append('video',await fs.createReadStream(path.resolve(obj.fp)));
-formData.append('caption',obj.file.name);response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, formData, {headers:{'Content-Type': 'multipart/form-data'},data:formData});
+formData.append('caption',`${obj.file.counter.cr}. ${obj.file.name}`);response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, formData, {headers:{'Content-Type': 'multipart/form-data'},data:formData});
     return response.data.ok;
 }
 
@@ -93,7 +102,7 @@ async function sendImg(obj,res){
  formData = new FormData();
  formData.append('chat_id',channel);
 formData.append('photo',await fs.createReadStream(path.resolve(obj.fp)));
-formData.append('caption',obj.file.name);response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, formData, {headers:{'Content-Type': 'multipart/form-data'},data:formData});
+formData.append('caption',`${obj.file.counter.cr}. ${obj.file.name}`);response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, formData, {headers:{'Content-Type': 'multipart/form-data'},data:formData});
     return response.data.ok;
 }
 
@@ -101,19 +110,20 @@ async function sendT(obj,res){
  formData = new FormData();
  formData.append('chat_id',channel);
 formData.append('document',await fs.createReadStream(path.resolve(obj.fp)));
-formData.append('caption',obj.file.name);response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, formData, {headers:{'Content-Type': 'multipart/form-data'},data:formData});
+formData.append('caption',`${obj.file.counter.cr}. ${obj.file.name}`);response = await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, formData, {headers:{'Content-Type': 'multipart/form-data'},data:formData});
     return response.data.ok;
 }
 
-async function dl(did,fobj){
+async function dl(did,fobj,crobj){
  return new Promise(async (res,rej)=>{
   fol = File.fromURL(flu=follf+"/file/"+did[1]);
   await fol.loadAttributes(async (error, ff) => {
   var ffpp=path.join(__dirname,dlp,ff.name);
     Ff=ff;
-  console.log("doing: "+ff.name);
+    ff.counter=crobj;
+  console.log(`doing: ${ff.name}-${crobj.cr} of ${crobj.t}`);
   fzz=await SizeF(ff.size);
-  msg1=await bot.telegram.sendMessage(owner,`Downloading:- ${ff.name}\nSize:- ${fzz}`);
+  msg1=await bot.telegram.sendMessage(owner,`Downloading:- ${crobj.cr} of ${crobj.t} \n\n${ff.name} \nSize:- ${fzz}`);
   stream= ff.download();
   stream.on('error', async (error) => {
     console.error(error);
@@ -141,7 +151,7 @@ async function dl(did,fobj){
          nnf=await sleepf(50);var rr;
          if(fobj.type=="image"){
            rr=await sendImg({fp:ffpp,file:ff});
-         }else if(fobj.type=="video"&&fobj.size<sizelimits.M20){
+         }else if(fobj.type=="video" && fobj.size < sizelimits.M20){
            rr=await sendV({fp:ffpp,file:ff});
          }else{
            rr=await sendT({fp:ffpp,file:ff});
@@ -167,13 +177,44 @@ async function dl(did,fobj){
 }) 
 }
 
+/*Skipping current file*/
+async function skipts(msg){
+  if(stopn==0){
+    data= fs.readFileSync('./files.json').toString();
+    obj = JSON.parse(data);
+    if(obj.files.length>=1){
+      file=obj.files.shift();
+      str=`skiped this file:-\n\n`;
+      for(key in file){
+         v=file[key];
+         str+=`   🔰${key} : ${v}\n`;
+      }
+      await bot.telegram.editMessageText(owner,msg.message_id,null,str);
+      console.log("done",x);
+      fs.writeFileSync("files.json",JSON.stringify(obj));
+      setTimeout(timingS,timingsSleep);
+    }else{
+      console.log("no files");
+      await bot.telegram.editMessageText(owner,msg.message_id,null,"Process finished!!😇\nSo no files to skip!!!");
+      run=0;
+    }
+  }else{
+    console.log("stopped!!!!");
+    await cleardl();
+    bot.telegram.sendMessage(owner,"process stoped!🙂\nBy You@");
+    stopn=0;
+    run=0;
+  }
+}
+    
 async function timingS(){
   if(stopn==0){
   data= fs.readFileSync('./files.json').toString();
   obj = JSON.parse(data);
   if(obj.files.length>=1){
     file=obj.files.shift();
-    x=await dl(file.downloadId,file);
+    obj.current+=1;
+    x=await dl(file.downloadId,file,{cr:obj.current,t:obj.total});
     if(x==true){
       console.log("done",x);
       fs.writeFileSync("files.json",JSON.stringify(obj));
@@ -197,6 +238,23 @@ async function timingS(){
   }
 }
 
+/*skipping some count of files from start using index...*/
+async function skipind(msg,ind){
+  data= fs.readFileSync('./files.json').toString();
+  obj = JSON.parse(data);
+  if(obj.files.length>=ind){
+    skfiles=obj.files.splice(0,ind);
+    str=`Skipped ${ind} files\n now you can send /ts to run me!`;
+    await bot.telegram.editMessageText(owner,msg.message_id,null,str);
+    console.log("done",x);
+    fs.writeFileSync("files.json",JSON.stringify(obj));
+  }else{
+    str=`no file above that amout\nI have only ${obj.files.length} files to send.\nplease try lower number🙃`;
+    await bot.telegram.editMessageText(owner,msg.message_id,null,str);
+  }
+}
+
+
 async function loadMega(url) {
   run=1;follf=url;
   const folder = File.fromURL(url);obj={files:[]};
@@ -204,10 +262,14 @@ async function loadMega(url) {
   h=JSON.stringify(folder, replacerFunc());
   fg=fl.find(e=>e.size<=sizelimits.M50);
   console.log(folder.children.length);
-  fs.writeFileSync("files.json",JSON.stringify({files:fl}));
+  fs.writeFileSync("files.json",JSON.stringify({
+    files:fl,
+    current:0,
+    total:fl.length;
+  }));
   fs.writeFileSync("Allfiles.json",JSON.stringify({files:fll}));
   
-  console.log(ctext=fll.length+" of files founded!\n and  "+fl.length+" of them can be uploaded to telegram");
+  console.log(ctext=fll.length+" of files founded!\n and  "+fl.length+" of them can be uploaded to telegram\nAnd "+erfiles.length+" of files are not files they are errored!");
   rt=`This is the Total extracted files from the link ${fl.length} of files I will send ${fg.length} files now`;
   spa=path.join(__dirname,"Allfiles.json");
   await bot.telegram.sendDocument(owner,{source:spa});
@@ -244,6 +306,7 @@ bot.on('text', async (ctx) => {
     }
   }else if(text == '/rerun'){
     if(run==0){
+      run=1;
       timingS();
     }else{
       ctx.reply('Alredy running😅!');
@@ -255,6 +318,9 @@ bot.on('text', async (ctx) => {
     ctx.reply('runnig var set to 0\nand download path cleared');
   }else if(text == '/ts'){
     ctx.reply('Trying to run timingS Func');
+    if(run==0){
+       run=1;
+    }
     timingS();
   }else if(text == '/isf'){
     dirCont = fs.readdirSync( ddlp );
@@ -271,6 +337,18 @@ bot.on('text', async (ctx) => {
   }else if(text == '/ttime'){
     dd=await sleepf(5000);
     await ctx.reply('im sleeped 5 sec');
+  }else if(text == '/skipF'){
+    msss=await ctx.reply('Trying to skip current File!**');
+    x=await skipts(msss);
+  }else if(text == '/numF'){
+    data= fs.readFileSync('./files.json').toString();
+    obj = JSON.parse(data);
+    count=obj.files.length;
+    await ctx.reply(`${count} of files reming`);
+  }else if(text.includes('sk--')==true){
+    ind=Number(text.split('--')[1]);
+    mzzz=await ctx.reply(`Trying to skip ${ind} of files!🫡`);
+    await skipind(mzzz,ind);
   }else{
     mc=await megaC(text);
     if(mc==true){
