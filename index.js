@@ -264,7 +264,7 @@ async function loadMega(url) {
   fs.writeFileSync("files.json",JSON.stringify({
     files:fl,
     current:0,
-    total:fl.length;
+    total:fl.length
   }));
   fs.writeFileSync("Allfiles.json",JSON.stringify({files:fll}));
   
