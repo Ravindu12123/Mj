@@ -19,6 +19,8 @@ var sizelimits={M20:20971520,M50:52428800,M100:104857600,};
 var timingsSleep=process.env.ts==null ? 1000:process.env.ts;
 var dlp=process.env.dlp==null ? "download":process.env.dlp;
 var smethod={image:{method:"sendPhoto",name:"photo"},video:{method:"sendVideo",name:"video"},document:{method:"sendDocument",name:"document"},audio:{method:"sendAudio",name:"audio"}};
+var sfilejson='./files.json';
+var Afilesjson='./Allfiles.json';
 
 app.use(cors());
 app.use(bodyParser.urlencoded({extended: true}));
@@ -179,10 +181,13 @@ async function dl(did,fobj,crobj){
 /*Skipping current file*/
 async function skipts(msg){
   if(stopn==0){
-    data= fs.readFileSync('./files.json').toString();
+    if(fs.existsSync(sfilesjson)){
+    data= fs.readFileSync(sfilesjson).toString();
     obj = JSON.parse(data);
     if(obj.files.length>=1){
       file=obj.files.shift();
+      obj.total=obj.files.length;
+      obj.current+=1;
       str=`skiped this file:-\n\n`;
       for(key in file){
          v=file[key];
@@ -190,12 +195,15 @@ async function skipts(msg){
       }
       await bot.telegram.editMessageText(owner,msg.message_id,null,str);
       console.log("done",x);
-      fs.writeFileSync("files.json",JSON.stringify(obj));
+      fs.writeFileSync(sfilesjson,JSON.stringify(obj));
       setTimeout(timingS,timingsSleep);
     }else{
       console.log("no files");
       await bot.telegram.editMessageText(owner,msg.message_id,null,"Process finished!!😇\nSo no files to skip!!!");
       run=0;
+    }
+    }else{
+      await bot.telegram.editMessageText(owner,msg.message_id,null,"No source file!");
     }
   }else{
     console.log("stopped!!!!");
@@ -208,7 +216,8 @@ async function skipts(msg){
     
 async function timingS(){
   if(stopn==0){
-  data= fs.readFileSync('./files.json').toString();
+  if(fs.existsSync(sfilesjson)){
+  data= fs.readFileSync(sfilesjson).toString();
   obj = JSON.parse(data);
   if(obj.files.length>=1){
     file=obj.files.shift();
@@ -216,17 +225,20 @@ async function timingS(){
     x=await dl(file.downloadId,file,{cr:obj.current,t:obj.total});
     if(x==true){
       console.log("done",x);
-      fs.writeFileSync("files.json",JSON.stringify(obj));
+      fs.writeFileSync(sfilesjson,JSON.stringify(obj));
       setTimeout(timingS,timingsSleep);
     }else{
       console.log("error on send");
-      fs.writeFileSync("files.json",JSON.stringify(obj));
+      fs.writeFileSync(sfilesjson,JSON.stringify(obj));
       setTimeout(timingS,timingsSleep);
     }
   }else{
     console.log("no files");
     await bot.telegram.sendMessage(owner,"Process finished!!😇");
     run=0;
+  }
+  }else{
+    await bot.telegram.sendMessage(owner,"No source file!");
   }
   }else{
     console.log("stopped!!!!");
@@ -239,18 +251,24 @@ async function timingS(){
 
 /*skipping some count of files from start using index...*/
 async function skipind(msg,ind){
-  data= fs.readFileSync('./files.json').toString();
+ if(fs.existsSync(sfilesjson){
+  data= fs.readFileSync(sfilesjson).toString();
   obj = JSON.parse(data);
   if(obj.files.length>=ind){
     skfiles=obj.files.splice(0,ind);
+    obj.current=0;
+    obj.total=obj.files.length;
     str=`Skipped ${ind} files\n now you can send /ts to run me!`;
     await bot.telegram.editMessageText(owner,msg.message_id,null,str);
     console.log("done",x);
-    fs.writeFileSync("files.json",JSON.stringify(obj));
+    fs.writeFileSync(sfilesjson,JSON.stringify(obj));
   }else{
     str=`no file above that amout\nI have only ${obj.files.length} files to send.\nplease try lower number🙃`;
     await bot.telegram.editMessageText(owner,msg.message_id,null,str);
   }
+ }else{
+    await bot.telegram.editMessageText(owner,msg.message_id,null,'No source file!');
+ }
 }
 
 
@@ -261,16 +279,16 @@ async function loadMega(url) {
   h=JSON.stringify(folder, replacerFunc());
   fg=fl.find(e=>e.size<=sizelimits.M50);
   console.log(folder.children.length);
-  fs.writeFileSync("files.json",JSON.stringify({
+  fs.writeFileSync(sfilesjson,JSON.stringify({
     files:fl,
     current:0,
     total:fl.length
   }));
-  fs.writeFileSync("Allfiles.json",JSON.stringify({files:fll}));
+  fs.writeFileSync(Afilesjson,JSON.stringify({files:fll}));
   
   console.log(ctext=fll.length+" of files founded!\n and  "+fl.length+" of them can be uploaded to telegram\nAnd "+erfiles.length+" of files are not files they are errored!");
   rt=`This is the Total extracted files from the link ${fl.length} of files I will send ${fg.length} files now`;
-  spa=path.join(__dirname,"Allfiles.json");
+  spa=path.join(__dirname,Afilesjson);
   await bot.telegram.sendDocument(owner,{source:spa});
   await bot.telegram.sendMessage(owner,ctext);
   run=1;
@@ -336,10 +354,14 @@ bot.on('text', async (ctx) => {
     msss=await ctx.reply('Trying to skip current File!**');
     x=await skipts(msss);
   }else if(text == '/numF'){
-    data= fs.readFileSync('./files.json').toString();
-    obj = JSON.parse(data);
-    count=obj.files.length;
-    await ctx.reply(`${count} of files reming`);
+    if(fs.existsSync(sfilesjson)){
+      data= fs.readFileSync(sfilesjson).toString();
+      obj = JSON.parse(data);
+      count=obj.files.length;
+      await ctx.reply(`${count} of files reming\n${obj.current} / ${obj.total}-Now stats`);
+    }else{
+      await ctx.reply('No source file!😐');
+    }
   }else if(text.includes('sk--')==true){
     ind=Number(text.split('--')[1]);
     mzzz=await ctx.reply(`Trying to skip ${ind} of files!🫡`);
