@@ -251,7 +251,7 @@ async function timingS(){
 
 /*skipping some count of files from start using index...*/
 async function skipind(msg,ind){
- if(fs.existsSync(sfilesjson){
+ if(fs.existsSync(sfilesjson)){
   data= fs.readFileSync(sfilesjson).toString();
   obj = JSON.parse(data);
   if(obj.files.length>=ind){
