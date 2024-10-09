@@ -19,7 +19,7 @@ var sizelimits={M20:20971520,M50:52428800,M100:104857600,};
 var timingsSleep=process.env.ts==null ? 1000:process.env.ts;
 var dlp=process.env.dlp==null ? "download":process.env.dlp;
 var smethod={image:{method:"sendPhoto",name:"photo"},video:{method:"sendVideo",name:"video"},document:{method:"sendDocument",name:"document"},audio:{method:"sendAudio",name:"audio"}};
-var sfilejson='./files.json';
+var sfilesjson='./files.json';
 var Afilesjson='./Allfiles.json';
 
 app.use(cors());
